@@ -1,2 +1,2 @@
-# Tefa-s-custom-drivers-
+# Tefa-custom-drivers
 GPU drivers for emulators 
