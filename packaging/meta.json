@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "Turnip Adreno 722",
+  "description": "Mesa Turnip (Freedreno Vulkan) build for Adreno 7xx, ARMv9, KGSL, Android. Source: github.com/Tefa2009M/Tefa-custom-drivers",
+  "author": "Tefa2009M",
+  "packageVersion": "1",
+  "vendor": "Mesa",
+  "driverVersion": "Mesa Turnip",
+  "minApi": 28,
+  "libraryName": "vulkan.adreno.so"
+}
