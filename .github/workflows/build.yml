@@ -31,7 +31,7 @@ jobs:
       API_LEVEL: ${{ github.event.inputs.api_level || '34' }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install host dependencies
         run: |
@@ -65,7 +65,7 @@ jobs:
 
       - name: Upload build logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-logs-${{ env.MESA_SHA }}
           path: |
@@ -79,7 +79,7 @@ jobs:
         run: bash scripts/package.sh "$GITHUB_WORKSPACE/mesa" "$GITHUB_WORKSPACE/packaging/meta.json" "$GITHUB_WORKSPACE/out" "$MESA_SHA" "$NDK_ROOT"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: turnip-a722-${{ env.MESA_SHA }}
           path: out/*.zip
@@ -87,7 +87,7 @@ jobs:
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: out/*.zip
 
