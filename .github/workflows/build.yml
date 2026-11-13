@@ -74,7 +74,9 @@ jobs:
           if-no-files-found: ignore
 
       - name: Package
-        run: bash scripts/package.sh "$GITHUB_WORKSPACE/mesa" "$GITHUB_WORKSPACE/packaging/meta.json" "$GITHUB_WORKSPACE/out" "$MESA_SHA"
+        env:
+          NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+        run: bash scripts/package.sh "$GITHUB_WORKSPACE/mesa" "$GITHUB_WORKSPACE/packaging/meta.json" "$GITHUB_WORKSPACE/out" "$MESA_SHA" "$NDK_ROOT"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
