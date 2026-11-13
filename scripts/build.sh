@@ -15,7 +15,7 @@ cpp = ['$BIN/aarch64-linux-android${API}-clang++']
 ar = '$BIN/llvm-ar'
 strip = '$BIN/llvm-strip'
 ranlib = '$BIN/llvm-ranlib'
-pkg-config = '/usr/bin/pkg-config'
+pkg-config = '/usr/bin/false'
 
 [host_machine]
 system = 'android'
@@ -56,6 +56,10 @@ meson setup build-android \
   -Dlmsensors=disabled \
   -Dzstd=disabled \
   -Dwrap_mode=forcefallback \
-  -Dstrip=false
+  -Dstrip=false \
+  2>&1 | tee "$MESA_DIR/meson-setup.log"
+
+echo "==> SPIRV-Tools resolution:"
+grep -iE "spirv-tools|spirv-headers" "$MESA_DIR/meson-setup.log" || echo "no SPIRV lines in meson setup output"
 
 ninja -C build-android -j"$(nproc)"
