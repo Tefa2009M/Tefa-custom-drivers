@@ -39,6 +39,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             ninja-build python3-pip python3-venv pkg-config bison flex \
             glslang-tools libwayland-dev wayland-protocols zip jq patchelf git
+          sudo apt-get purge -y spirv-tools libspirv-tools-dev || true
           python3 -m pip install --break-system-packages --upgrade meson mako pyyaml ply packaging
 
       - name: Set up Android NDK
@@ -61,6 +62,16 @@ jobs:
         env:
           NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
         run: bash scripts/build.sh "$GITHUB_WORKSPACE/mesa" "$NDK_ROOT" "$API_LEVEL"
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ env.MESA_SHA }}
+          path: |
+            mesa/meson-setup.log
+            mesa/build-android/meson-logs/meson-log.txt
+          if-no-files-found: ignore
 
       - name: Package
         run: bash scripts/package.sh "$GITHUB_WORKSPACE/mesa" "$GITHUB_WORKSPACE/packaging/meta.json" "$GITHUB_WORKSPACE/out" "$MESA_SHA"
