@@ -1,0 +1,85 @@
+name: Build Turnip (Adreno 722 / aarch64-android)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mesa_ref:
+        description: "Mesa git ref (branch, tag or commit)"
+        required: true
+        default: "main"
+      api_level:
+        description: "Android API level for the toolchain"
+        required: true
+        default: "34"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  REPO_SLUG: Tefa2009M/Tefa-custom-drivers
+
+jobs:
+  build:
+    if: github.repository == 'Tefa2009M/Tefa-custom-drivers'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      MESA_REF: ${{ github.event.inputs.mesa_ref || 'main' }}
+      API_LEVEL: ${{ github.event.inputs.api_level || '34' }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build python3-pip python3-venv pkg-config bison flex \
+            glslang-tools libwayland-dev wayland-protocols zip jq patchelf git
+          python3 -m pip install --break-system-packages --upgrade meson mako pyyaml ply packaging
+
+      - name: Set up Android NDK
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28c
+          add-to-path: false
+
+      - name: Clone Mesa
+        run: |
+          git clone https://gitlab.freedesktop.org/mesa/mesa.git mesa
+          git -C mesa checkout "$MESA_REF"
+          echo "MESA_SHA=$(git -C mesa rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: Apply patches
+        run: bash scripts/apply-patches.sh "$GITHUB_WORKSPACE/mesa" "$GITHUB_WORKSPACE/patches"
+
+      - name: Build
+        env:
+          NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+        run: bash scripts/build.sh "$GITHUB_WORKSPACE/mesa" "$NDK_ROOT" "$API_LEVEL"
+
+      - name: Package
+        run: bash scripts/package.sh "$GITHUB_WORKSPACE/mesa" "$GITHUB_WORKSPACE/packaging/meta.json" "$GITHUB_WORKSPACE/out" "$MESA_SHA"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-a722-${{ env.MESA_SHA }}
+          path: out/*.zip
+          if-no-files-found: error
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.zip
+
+      - name: Print release location
+        run: |
+          echo "Repository: https://github.com/${REPO_SLUG}"
+          echo "Actions:    https://github.com/${REPO_SLUG}/actions"
+          echo "Releases:   https://github.com/${REPO_SLUG}/releases"
